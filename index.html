@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>LC記帳</title>
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-title" content="LC記帳">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, "PingFang HK", "Microsoft JhengHei", sans-serif; margin: 0; padding: 16px 14px 110px; background: #f6f6f4; color: #1c1c1a; }
+  @media (prefers-color-scheme: dark) { body { background: #171716; color: #f2f2ef; } .chip { background:#262624 !important; border-color:#3d3d3a !important; color:#f2f2ef; } input { background:#262624 !important; color:#f2f2ef; border-color:#3d3d3a !important; } }
+  h2 { font-size: 17px; margin: 18px 0 10px; }
+  h2:first-child { margin-top: 2px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 9px; }
+  .chip { flex: 1 1 30%; min-height: 52px; padding: 10px 6px; font-size: 15px; border: 1.5px solid #cfcfc9; border-radius: 12px; background: #fff; cursor: pointer; }
+  .chip.sel { background: #1c6b3c !important; color: #fff; border-color: #1c6b3c; font-weight: 700; }
+  .miss { outline: 2.5px solid #d43a2f; outline-offset: 2px; }
+  input { width: 100%; font-size: 20px; padding: 13px; border: 1.5px solid #cfcfc9; border-radius: 12px; background: #fff; }
+  input.small { font-size: 16px; padding: 11px; }
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: inherit; }
+  #submit { width: 100%; min-height: 58px; font-size: 19px; font-weight: 700; border: none; border-radius: 14px; background: #1c6b3c; color: #fff; cursor: pointer; }
+  #submit:disabled { opacity: .55; }
+  #msg { text-align: center; font-size: 16px; margin-top: 12px; min-height: 22px; }
+  #again { display: none; width: 100%; min-height: 52px; margin-top: 10px; font-size: 17px; border-radius: 12px; border: 1.5px solid #1c6b3c; background: transparent; color: inherit; cursor: pointer; }
+  .err { color: #d43a2f; font-weight: 700; }
+</style>
+</head>
+<body>
+<h2>信用卡</h2>
+<div class="grid" id="cards"></div>
+<h2>消費類別</h2>
+<div class="grid" id="cats"></div>
+<button id="toggleCats" type="button" style="margin-top:9px;min-height:44px;padding:8px 14px;font-size:14px;border-radius:10px;border:1.5px dashed #999;background:transparent;color:inherit;cursor:pointer;">顯示全部類別</button>
+<h2>金額 HK$</h2>
+<input id="amount" type="number" inputmode="decimal" min="0" step="any" placeholder="例如 128">
+<h2>商戶／備註（可留空）</h2>
+<input id="merchant" class="small" type="text" placeholder="例如 惠康">
+<div id="bar">
+  <button id="submit">記低佢</button>
+  <div id="msg"></div>
+  <button id="again">再記一筆</button>
+</div>
+<script>
+  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeClc21CHEYUl07MX6Mej8WxVT2hGw-MyknawgIwdZlVpB2pw/formResponse';
+  var CARDS = ['HSBC EveryMile','HSBC RED','恒生 MMPOWER','渣打 Simply Cash','安信 WeWa','中銀 BOC Bliss','AEON WAKUWAKU','建行 eye+','HSBC RED 附屬卡','中銀 SOGO Visa','中銀 GO 鑽石卡'];
+  var ALL_CATS = ['網購 - 一般','網購 - 指定商戶','指定商戶 - RED 8%','網上娛樂／服飾','手機支付','旅遊簽賬','海外實體 - 外幣','本地實體 - 一般','本地交通／咖啡輕食','其他','日本實體簽賬','SOGO 店內','指定Go商戶'];
+  var CARD_CATS = {
+    'HSBC EveryMile': [['網購 - 指定商戶（約2.5%）','網購 - 指定商戶'],['旅遊簽賬（約2.5%）','旅遊簽賬'],['海外實體 - 外幣（約2.5%）','海外實體 - 外幣'],['本地交通／咖啡輕食（約2.5%）','本地交通／咖啡輕食']],
+    'HSBC RED': [['指定商戶 - RED 8%（8%）','指定商戶 - RED 8%'],['網購 - 一般（4%）','網購 - 一般'],['網購 - 指定商戶（4%）','網購 - 指定商戶']],
+    '恒生 MMPOWER': [['網購 - 指定商戶（8%）','網購 - 指定商戶'],['網上娛樂／服飾（8%）','網上娛樂／服飾'],['網購 - 一般（5%）','網購 - 一般'],['海外實體 - 外幣（4%）','海外實體 - 外幣']],
+    '渣打 Simply Cash': [['海外實體 - 外幣（2%）','海外實體 - 外幣'],['網購 - 一般（1.5%）','網購 - 一般'],['手機支付（1.5%）','手機支付'],['本地實體 - 一般（1.5%）','本地實體 - 一般'],['其他（1.5%）','其他']],
+    '安信 WeWa': [['手機支付（4%）','手機支付'],['海外實體 - 外幣（4%）','海外實體 - 外幣']],
+    '中銀 BOC Bliss': [['網購 - 指定商戶（6%）','網購 - 指定商戶'],['網購 - 一般（4%）','網購 - 一般']],
+    'AEON WAKUWAKU': [['網購 - 一般（6%）','網購 - 一般'],['網購 - 指定商戶（6%）','網購 - 指定商戶'],['日本實體簽賬（6%）','日本實體簽賬'],['本地實體 - 一般（餐飲 1%）','本地實體 - 一般']],
+    '建行 eye+': [['網購 - 一般（5%）','網購 - 一般'],['手機支付（3%）','手機支付']],
+    'HSBC RED 附屬卡': [['指定商戶 - RED 8%（8%）','指定商戶 - RED 8%'],['網購 - 一般（4%）','網購 - 一般'],['網購 - 指定商戶（4%）','網購 - 指定商戶']],
+    '中銀 SOGO Visa': [['手機支付（5.4%）','手機支付'],['SOGO 店內（5%）','SOGO 店內']],
+    '中銀 GO 鑽石卡': [['指定Go商戶（5%）','指定Go商戶'],['手機支付（本地 4%／內地 8%）','手機支付']]
+  };
+  var sel = { card: null, cat: null };
+  var showAllCats = false;
+  function buildCards() {
+    var box = document.getElementById('cards');
+    CARDS.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = t;
+      b.onclick = function () {
+        sel.card = t; sel.cat = null; showAllCats = false;
+        var kids = box.children;
+        for (var i = 0; i < kids.length; i++) kids[i].classList.toggle('sel', kids[i] === b);
+        box.classList.remove('miss');
+        renderCats();
+      };
+      box.appendChild(b);
+    });
+  }
+  function renderCats() {
+    var box = document.getElementById('cats');
+    box.innerHTML = '';
+    document.getElementById('toggleCats').textContent = showAllCats ? '只顯示呢張卡嘅類別' : '顯示全部類別';
+    if (!sel.card && !showAllCats) {
+      var hint = document.createElement('div');
+      hint.textContent = '請先揀信用卡';
+      hint.style.cssText = 'padding:10px 2px;font-size:15px;opacity:.65;';
+      box.appendChild(hint);
+      return;
+    }
+    var list = showAllCats ? ALL_CATS.map(function (v) { return [v, v]; }) : (CARD_CATS[sel.card] || []);
+    list.forEach(function (pair) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = pair[0];
+      if (sel.cat === pair[1]) b.classList.add('sel');
+      b.onclick = function () {
+        sel.cat = pair[1];
+        var kids = box.children;
+        for (var i = 0; i < kids.length; i++) kids[i].classList.toggle('sel', kids[i] === b);
+        box.classList.remove('miss');
+      };
+      box.appendChild(b);
+    });
+  }
+  buildCards();
+  renderCats();
+  document.getElementById('toggleCats').onclick = function () { showAllCats = !showAllCats; if (showAllCats) sel.cat = null; renderCats(); };
+  var msg = document.getElementById('msg');
+  var submitBtn = document.getElementById('submit');
+  var againBtn = document.getElementById('again');
+  submitBtn.onclick = function () {
+    var amt = document.getElementById('amount').value.trim();
+    var ok = true;
+    if (!sel.card) { document.getElementById('cards').classList.add('miss'); ok = false; }
+    if (!sel.cat) { document.getElementById('cats').classList.add('miss'); ok = false; }
+    if (!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0) { document.getElementById('amount').classList.add('miss'); ok = false; }
+    if (!ok) { msg.innerHTML = '<span class="err">仲欠資料，已用紅框標住</span>'; return; }
+    document.getElementById('amount').classList.remove('miss');
+    submitBtn.disabled = true; msg.textContent = '入緊數…';
+    var body = new URLSearchParams();
+    body.append('entry.1972860258', sel.card);
+    body.append('entry.410197939', sel.cat);
+    body.append('entry.374739302', amt);
+    var mer = document.getElementById('merchant').value.trim();
+    if (mer) body.append('entry.1519343581', mer);
+    fetch(FORM_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
+      .then(function () {
+        msg.textContent = '已記低 ✓ ' + sel.card + '／' + sel.cat + '／$' + amt;
+        againBtn.style.display = 'block';
+      })
+      .catch(function () {
+        msg.innerHTML = '<span class="err">網絡出問題，嗰筆未入到，再㩒一次</span>';
+        submitBtn.disabled = false;
+      });
+  };
+  againBtn.onclick = function () {
+    document.getElementById('amount').value = '';
+    document.getElementById('merchant').value = '';
+    msg.textContent = ''; againBtn.style.display = 'none'; submitBtn.disabled = false;
+    window.scrollTo(0, 0);
+  };
+</script>
+</body>
+</html>
