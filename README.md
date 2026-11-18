@@ -1,1 +1,1 @@
-# lc-jizhang
+# LC-CC-Record
