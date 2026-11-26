@@ -61,13 +61,20 @@
 </div>
 <script>
   var API_URL = 'https://script.google.com/macros/s/AKfycbxkI5322KO4LrTcvVrMPvXw8Gy_8YNsu5JgFzj6IfE1hz8XTfUgT6DWwF23BlooSUnr/exec';
+  var API_URL_ALT = 'https://script.google.com/a/*/macros/s/AKfycbxkI5322KO4LrTcvVrMPvXw8Gy_8YNsu5JgFzj6IfE1hz8XTfUgT6DWwF23BlooSUnr/exec';
   var savedCode = null;
   try { savedCode = localStorage.getItem('lc_cc_code'); } catch (e) {}
   function jsonp(params, done) {
+    jsonpAttempt(API_URL, params, function (res) {
+      if (res) { done(res); return; }
+      jsonpAttempt(API_URL_ALT, params, done);
+    });
+  }
+  function jsonpAttempt(baseUrl, params, done) {
     var cbName = '__cb' + Date.now() + Math.floor(Math.random() * 100000);
     var s = document.createElement('script');
     var finished = false;
-    var timer = setTimeout(function () { finish(null); }, 20000);
+    var timer = setTimeout(function () { finish(null); }, 15000);
     function finish(res) {
       if (finished) return; finished = true;
       clearTimeout(timer);
@@ -78,7 +85,7 @@
     window[cbName] = function (res) { finish(res); };
     s.onerror = function () { finish(null); };
     var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
-    s.src = API_URL + '?' + qs + '&callback=' + cbName;
+    s.src = baseUrl + '?' + qs + '&callback=' + cbName;
     document.body.appendChild(s);
   }
   function showLock(note) {
