@@ -26,9 +26,25 @@
   #msg { text-align: center; font-size: 16px; margin-top: 12px; min-height: 22px; }
   #again { display: none; width: 100%; min-height: 52px; margin-top: 10px; font-size: 17px; border-radius: 12px; border: 1.5px solid #1c6b3c; background: transparent; color: inherit; cursor: pointer; }
   .err { color: #d43a2f; font-weight: 700; }
+  #lock { position: fixed; inset: 0; z-index: 50; background: #f6f6f4; display: flex; align-items: flex-start; justify-content: center; padding: 70px 22px 22px; }
+  @media (prefers-color-scheme: dark) { #lock { background: #171716; } }
+  .lockbox { width: 100%; max-width: 340px; text-align: center; }
+  #unlockBtn { width: 100%; min-height: 54px; margin-top: 12px; font-size: 18px; font-weight: 700; border: none; border-radius: 14px; background: #1c6b3c; color: #fff; cursor: pointer; }
+  #unlockBtn:disabled { opacity: .55; }
+  #lockMsg { margin-top: 12px; font-size: 15px; min-height: 22px; }
 </style>
 </head>
 <body>
+<div id="lock">
+  <div class="lockbox">
+    <div style="font-size:42px">🔒</div>
+    <h2 style="margin:10px 0 4px">LC記帳</h2>
+    <p style="opacity:.7;margin:0 0 16px">請輸入認證碼先可以記帳</p>
+    <input id="codeInput" type="text" placeholder="認證碼" autocomplete="off" autocapitalize="characters" style="text-align:center">
+    <button id="unlockBtn" type="button">進入</button>
+    <div id="lockMsg"></div>
+  </div>
+</div>
 <h2>信用卡</h2>
 <div class="grid" id="cards"></div>
 <h2>消費類別</h2>
@@ -44,7 +60,54 @@
   <button id="again">再記一筆</button>
 </div>
 <script>
-  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeClc21CHEYUl07MX6Mej8WxVT2hGw-MyknawgIwdZlVpB2pw/formResponse';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbxkI5322KO4LrTcvVrMPvXw8Gy_8YNsu5JgFzj6IfE1hz8XTfUgT6DWwF23BlooSUnr/exec';
+  var savedCode = null;
+  try { savedCode = localStorage.getItem('lc_cc_code'); } catch (e) {}
+  function jsonp(params, done) {
+    var cbName = '__cb' + Date.now() + Math.floor(Math.random() * 100000);
+    var s = document.createElement('script');
+    var finished = false;
+    var timer = setTimeout(function () { finish(null); }, 20000);
+    function finish(res) {
+      if (finished) return; finished = true;
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+      done(res);
+    }
+    window[cbName] = function (res) { finish(res); };
+    s.onerror = function () { finish(null); };
+    var qs = Object.keys(params).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }).join('&');
+    s.src = API_URL + '?' + qs + '&callback=' + cbName;
+    document.body.appendChild(s);
+  }
+  function showLock(note) {
+    document.getElementById('lock').style.display = 'flex';
+    if (note) document.getElementById('lockMsg').innerHTML = '<span class="err">' + note + '</span>';
+  }
+  function hideLock() { document.getElementById('lock').style.display = 'none'; }
+  if (savedCode) hideLock();
+  document.getElementById('unlockBtn').onclick = function () {
+    var c = document.getElementById('codeInput').value.trim();
+    var lm = document.getElementById('lockMsg');
+    if (!c) { lm.innerHTML = '<span class="err">請輸入認證碼</span>'; return; }
+    var btn = document.getElementById('unlockBtn');
+    btn.disabled = true; lm.textContent = '驗證緊…';
+    jsonp({ fn: 'check', code: c }, function (res) {
+      btn.disabled = false;
+      if (res && res.ok) {
+        savedCode = c;
+        try { localStorage.setItem('lc_cc_code', c); } catch (e) {}
+        lm.textContent = '';
+        hideLock();
+      } else if (res && res.error === 'code') {
+        lm.innerHTML = '<span class="err">認證碼唔啱</span>';
+      } else {
+        lm.innerHTML = '<span class="err">網絡出問題，再試一次</span>';
+      }
+    });
+  };
+  document.getElementById('codeInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('unlockBtn').click(); });
   var CARDS = ['HSBC EveryMile','HSBC RED','恒生 MMPOWER','渣打 Simply Cash','安信 WeWa','中銀 BOC Bliss','AEON WAKUWAKU','建行 eye+','HSBC RED 附屬卡','中銀 SOGO Visa','中銀 GO 鑽石卡'];
   var ALL_CATS = ['網購 - 一般','網購 - 指定商戶','指定商戶 - RED 8%','網上娛樂／服飾','手機支付','旅遊簽賬','海外實體 - 外幣','本地實體 - 一般','本地交通／咖啡輕食','其他','日本實體簽賬','SOGO 店內','指定Go商戶'];
   var CARD_CATS = {
@@ -117,21 +180,22 @@
     if (!ok) { msg.innerHTML = '<span class="err">仲欠資料，已用紅框標住</span>'; return; }
     document.getElementById('amount').classList.remove('miss');
     submitBtn.disabled = true; msg.textContent = '入緊數…';
-    var body = new URLSearchParams();
-    body.append('entry.1972860258', sel.card);
-    body.append('entry.410197939', sel.cat);
-    body.append('entry.374739302', amt);
     var mer = document.getElementById('merchant').value.trim();
-    if (mer) body.append('entry.1519343581', mer);
-    fetch(FORM_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() })
-      .then(function () {
+    jsonp({ fn: 'record', code: savedCode || '', card: sel.card, cat: sel.cat, amount: amt, merchant: mer }, function (res) {
+      if (res && res.ok) {
         msg.textContent = '已記低 ✓ ' + sel.card + '／' + sel.cat + '／$' + amt;
         againBtn.style.display = 'block';
-      })
-      .catch(function () {
+      } else if (res && res.error === 'code') {
+        savedCode = null;
+        try { localStorage.removeItem('lc_cc_code'); } catch (e) {}
+        submitBtn.disabled = false;
+        msg.textContent = '';
+        showLock('認證碼唔啱，請重新輸入');
+      } else {
         msg.innerHTML = '<span class="err">網絡出問題，嗰筆未入到，再㩒一次</span>';
         submitBtn.disabled = false;
-      });
+      }
+    });
   };
   againBtn.onclick = function () {
     document.getElementById('amount').value = '';
