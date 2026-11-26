@@ -26,6 +26,31 @@
   #msg { text-align: center; font-size: 16px; margin-top: 12px; min-height: 22px; }
   #again { display: none; width: 100%; min-height: 52px; margin-top: 10px; font-size: 17px; border-radius: 12px; border: 1.5px solid #1c6b3c; background: transparent; color: inherit; cursor: pointer; }
   .err { color: #d43a2f; font-weight: 700; }
+  .tabs { display: flex; gap: 9px; margin-bottom: 6px; }
+  .tab { flex: 1; min-height: 52px; font-size: 17px; font-weight: 700; border-radius: 12px; border: 1.5px solid #cfcfc9; background: #fff; color: inherit; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { .tab { background:#262624; border-color:#3d3d3a; } .cardrow { background:#262624 !important; border-color:#3d3d3a !important; color:#f2f2ef; } select { background:#262624 !important; color:#f2f2ef; border-color:#3d3d3a !important; } }
+  .tab.sel { background: #1c6b3c !important; color: #fff; border-color: #1c6b3c; }
+  #syncBtn, #listReload { width: 100%; min-height: 58px; font-size: 19px; font-weight: 700; border: none; border-radius: 14px; background: #1c6b3c; color: #fff; cursor: pointer; }
+  #syncBtn:disabled, #listReload:disabled { opacity: .55; }
+  #quotaMsg, #listMsg { text-align: center; font-size: 16px; margin-top: 12px; min-height: 22px; }
+  .cardrow { width: 100%; text-align: left; min-height: 58px; padding: 12px 14px; margin-bottom: 9px; font-size: 16px; border: 1.5px solid #cfcfc9; border-radius: 12px; background: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .cardrow .amt { font-weight: 700; }
+  .erow { width: 100%; text-align: left; padding: 11px 13px; margin-bottom: 8px; font-size: 15px; border: 1.5px solid #cfcfc9; border-radius: 12px; background: #fff; cursor: pointer; color: inherit; }
+  @media (prefers-color-scheme: dark) { .erow { background:#262624 !important; border-color:#3d3d3a !important; color:#f2f2ef; } }
+  .erow .r1 { display: flex; justify-content: space-between; font-weight: 700; }
+  .erow .r2 { opacity: .75; margin-top: 2px; }
+  .pool { border: 1.5px solid #cfcfc9; border-radius: 12px; padding: 10px 12px; margin-bottom: 9px; }
+  .pool .pname { font-weight: 700; margin-bottom: 4px; }
+  .bar2 { height: 8px; border-radius: 4px; background: rgba(127,127,127,.3); margin-top: 6px; }
+  .bar2 > div { height: 8px; border-radius: 4px; background: #1c6b3c; }
+  .note { font-size: 13px; opacity: .7; margin-top: 10px; }
+  #backBtn, #editBack { min-height: 44px; padding: 8px 14px; font-size: 15px; border-radius: 10px; border: 1.5px solid #999; background: transparent; color: inherit; cursor: pointer; margin-bottom: 10px; }
+  .big { font-size: 22px; font-weight: 700; }
+  select { width: 100%; font-size: 17px; padding: 12px; border: 1.5px solid #cfcfc9; border-radius: 12px; background: #fff; color: inherit; }
+  #saveEdit { width: 100%; min-height: 56px; font-size: 18px; font-weight: 700; border: none; border-radius: 14px; background: #1c6b3c; color: #fff; cursor: pointer; margin-top: 14px; }
+  #saveEdit:disabled { opacity: .55; }
+  #delEdit { width: 100%; min-height: 50px; font-size: 16px; border-radius: 12px; border: 1.5px solid #d43a2f; background: transparent; color: #d43a2f; cursor: pointer; margin-top: 10px; }
+  #editMsg { text-align: center; font-size: 16px; margin-top: 12px; min-height: 22px; }
   #lock { position: fixed; inset: 0; z-index: 50; background: #f6f6f4; display: flex; align-items: flex-start; justify-content: center; padding: 70px 22px 22px; }
   @media (prefers-color-scheme: dark) { #lock { background: #171716; } }
   .lockbox { width: 100%; max-width: 340px; text-align: center; }
@@ -45,6 +70,12 @@
     <div id="lockMsg"></div>
   </div>
 </div>
+<div class="tabs">
+  <button class="tab sel" id="tabRec" type="button">記帳</button>
+  <button class="tab" id="tabList" type="button">明細</button>
+  <button class="tab" id="tabQuota" type="button">額度</button>
+</div>
+<div id="viewRec">
 <h2>信用卡</h2>
 <div class="grid" id="cards"></div>
 <h2>消費類別</h2>
@@ -58,6 +89,32 @@
   <button id="submit">記低佢</button>
   <div id="msg"></div>
   <button id="again">再記一筆</button>
+</div>
+</div>
+<div id="viewList" style="display:none;">
+  <button id="listReload" type="button">載入明細</button>
+  <div id="listMsg"></div>
+  <div id="entryList"></div>
+  <div id="entryEdit" style="display:none;">
+    <button id="editBack" type="button">← 返回明細</button>
+    <h2>信用卡</h2>
+    <select id="editCard"></select>
+    <h2>消費類別</h2>
+    <select id="editCat"></select>
+    <h2>金額 HK$</h2>
+    <input id="editAmount" type="number" inputmode="decimal" min="0" step="any">
+    <h2>商戶／備註（可留空）</h2>
+    <input id="editMerchant" class="small" type="text">
+    <button id="saveEdit" type="button">儲存修改</button>
+    <button id="delEdit" type="button">刪除呢筆</button>
+    <div id="editMsg"></div>
+  </div>
+</div>
+<div id="viewQuota" style="display:none;">
+  <button id="syncBtn" type="button">同步 Google 資料</button>
+  <div id="quotaMsg"></div>
+  <div id="quotaList"></div>
+  <div id="quotaDetail" style="display:none;"></div>
 </div>
 <script>
   var API_URL = 'https://script.google.com/macros/s/AKfycbxkI5322KO4LrTcvVrMPvXw8Gy_8YNsu5JgFzj6IfE1hz8XTfUgT6DWwF23BlooSUnr/exec';
@@ -190,6 +247,7 @@
     var mer = document.getElementById('merchant').value.trim();
     jsonp({ fn: 'record', code: savedCode || '', card: sel.card, cat: sel.cat, amount: amt, merchant: mer }, function (res) {
       if (res && res.ok) {
+        entriesCache = null; quotaData = null;
         msg.textContent = '已記低 ✓ ' + sel.card + '／' + sel.cat + '／$' + amt;
         againBtn.style.display = 'block';
       } else if (res && res.error === 'code') {
@@ -210,6 +268,299 @@
     msg.textContent = ''; againBtn.style.display = 'none'; submitBtn.disabled = false;
     window.scrollTo(0, 0);
   };
+
+  // ===== 分頁 =====
+  function switchView(name) {
+    document.getElementById('tabRec').classList.toggle('sel', name === 'rec');
+    document.getElementById('tabList').classList.toggle('sel', name === 'list');
+    document.getElementById('tabQuota').classList.toggle('sel', name === 'quota');
+    document.getElementById('viewRec').style.display = name === 'rec' ? '' : 'none';
+    document.getElementById('viewList').style.display = name === 'list' ? '' : 'none';
+    document.getElementById('viewQuota').style.display = name === 'quota' ? '' : 'none';
+    if (name === 'list') loadEntries(false);
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('tabRec').onclick = function () { switchView('rec'); };
+  document.getElementById('tabList').onclick = function () { switchView('list'); };
+  document.getElementById('tabQuota').onclick = function () { switchView('quota'); };
+
+  // ===== 資料讀取（明細＋額度共用） =====
+  var entriesCache = null;
+  function money(n) { return '$' + n.toLocaleString('en-HK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function codeExpired() {
+    savedCode = null;
+    try { localStorage.removeItem('lc_cc_code'); } catch (e) {}
+    showLock('認證碼唔啱，請重新輸入');
+  }
+  function loadEntries(force) {
+    if (entriesCache && !force) { renderList(); return; }
+    var listMsg = document.getElementById('listMsg');
+    listMsg.textContent = '載入緊…';
+    jsonp({ fn: 'entries', code: savedCode || '' }, function (res) {
+      if (res && res.ok && res.entries) {
+        entriesCache = res.entries;
+        listMsg.textContent = '';
+        renderList();
+        if (quotaData) renderQuotaList();
+      } else if (res && res.error === 'code') {
+        codeExpired();
+      } else {
+        listMsg.innerHTML = '<span class="err">載入失敗，請再試一次</span>';
+      }
+    });
+  }
+  document.getElementById('listReload').onclick = function () { loadEntries(true); };
+
+  // ===== 明細 =====
+  function fmtDate(ts) {
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + '/' + d.getDate();
+  }
+  function renderList() {
+    var box = document.getElementById('entryList');
+    document.getElementById('entryEdit').style.display = 'none';
+    box.style.display = '';
+    box.innerHTML = '';
+    if (!entriesCache) return;
+    var sorted = entriesCache.slice().sort(function (a, b) { return b.ts - a.ts; });
+    if (!sorted.length) { box.innerHTML = '<div class="note">未有紀錄</div>'; return; }
+    sorted.forEach(function (e) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'erow';
+      b.innerHTML = '<div class="r1"><span>' + fmtDate(e.ts) + ' ' + e.card + '</span><span>' + money(e.amount) + '</span></div>' +
+        '<div class="r2">' + e.cat + (e.merchant ? '・' + e.merchant : '') + '</div>';
+      b.onclick = function () { openEdit(e); };
+      box.appendChild(b);
+    });
+  }
+  var editingId = null;
+  function fillSelect(selEl, options, value) {
+    selEl.innerHTML = '';
+    options.forEach(function (o) {
+      var op = document.createElement('option');
+      op.value = o; op.textContent = o;
+      if (o === value) op.selected = true;
+      selEl.appendChild(op);
+    });
+  }
+  function openEdit(e) {
+    editingId = e.id;
+    document.getElementById('entryList').style.display = 'none';
+    document.getElementById('listMsg').textContent = '';
+    var ed = document.getElementById('entryEdit');
+    ed.style.display = '';
+    fillSelect(document.getElementById('editCard'), CARDS, e.card);
+    fillSelect(document.getElementById('editCat'), ALL_CATS, e.cat);
+    document.getElementById('editAmount').value = e.amount;
+    document.getElementById('editMerchant').value = e.merchant || '';
+    document.getElementById('editMsg').textContent = '';
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('editBack').onclick = function () { renderList(); };
+  document.getElementById('saveEdit').onclick = function () {
+    var amt = document.getElementById('editAmount').value.trim();
+    var editMsg = document.getElementById('editMsg');
+    if (!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0) { editMsg.innerHTML = '<span class="err">金額唔啱</span>'; return; }
+    var btn = document.getElementById('saveEdit');
+    btn.disabled = true; editMsg.textContent = '儲存緊…';
+    jsonp({ fn: 'update', code: savedCode || '', id: editingId, card: document.getElementById('editCard').value, cat: document.getElementById('editCat').value, amount: amt, merchant: document.getElementById('editMerchant').value.trim() }, function (res) {
+      btn.disabled = false;
+      if (res && res.ok) {
+        entriesCache = null; quotaData = null;
+        editMsg.textContent = '已儲存 ✓';
+        loadEntries(true);
+      } else if (res && res.error === 'code') { codeExpired(); }
+      else { editMsg.innerHTML = '<span class="err">儲存失敗，請再試一次</span>'; }
+    });
+  };
+  document.getElementById('delEdit').onclick = function () {
+    if (!confirm('真係要刪除呢筆？')) return;
+    var editMsg = document.getElementById('editMsg');
+    editMsg.textContent = '刪除緊…';
+    jsonp({ fn: 'delete', code: savedCode || '', id: editingId }, function (res) {
+      if (res && res.ok) {
+        entriesCache = null; quotaData = null;
+        loadEntries(true);
+      } else if (res && res.error === 'code') { codeExpired(); }
+      else { editMsg.innerHTML = '<span class="err">刪除失敗，請再試一次</span>'; }
+    });
+  };
+
+  // ===== 額度計算 =====
+  var quotaData = null;
+  function monthPeriod(now) {
+    var start = new Date(now.getFullYear(), now.getMonth(), 1);
+    var end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    return { start: start, end: end, label: start.getFullYear() + '年' + (start.getMonth() + 1) + '月1日 – ' + (end.getMonth() + 1) + '月' + end.getDate() + '日' };
+  }
+  function cyclePeriod(now) {
+    var y = now.getFullYear(), m = now.getMonth();
+    var start, end;
+    if (now.getDate() >= 13) { start = new Date(y, m, 13); end = new Date(y, m + 1, 12, 23, 59, 59); }
+    else { start = new Date(y, m - 1, 13); end = new Date(y, m, 12, 23, 59, 59); }
+    return { start: start, end: end, label: start.getFullYear() + '年' + (start.getMonth() + 1) + '月13日 – ' + end.getFullYear() + '年' + (end.getMonth() + 1) + '月12日' };
+  }
+  function sumCat(entries, cats) {
+    var s = 0;
+    entries.forEach(function (e) { if (cats.indexOf(e.cat) >= 0) s += e.amount; });
+    return s;
+  }
+  function redCompute(r, entries, total) {
+    var online = sumCat(entries, ['網購 - 一般', '網購 - 指定商戶']);
+    var des = sumCat(entries, ['指定商戶 - RED 8%']);
+    r.rebate = Math.min(online, 10000) * 0.04 + Math.max(online - 10000, 0) * 0.004 + Math.min(des, 1250) * 0.08 + Math.max(des - 1250, 0) * 0.004 + (total - online - des) * 0.004;
+    r.pools.push({ name: '網購 4%', used: Math.min(online, 10000), cap: 10000, unit: 'spend' });
+    r.pools.push({ name: '指定商戶 8%', used: Math.min(des, 1250), cap: 1250, unit: 'spend' });
+  }
+  function computeCard(card, allEntries) {
+    var now = new Date();
+    var p = (card === 'AEON WAKUWAKU') ? cyclePeriod(now) : monthPeriod(now);
+    var entries = allEntries.filter(function (e) {
+      return e.card === card && e.ts >= p.start.getTime() && e.ts <= p.end.getTime() && !/^TEST/i.test(e.merchant || '');
+    });
+    var total = 0;
+    entries.forEach(function (e) { total += e.amount; });
+    var r = { card: card, periodLabel: p.label, total: total, rebate: 0, miles: null, pools: [], notes: [] };
+
+    if (card === '恒生 MMPOWER') {
+      var extraRate = { '網購 - 指定商戶': 0.076, '網上娛樂／服飾': 0.076, '網購 - 一般': 0.046, '海外實體 - 外幣': 0.036 };
+      var extra = 0;
+      entries.forEach(function (e) { extra += e.amount * (extraRate[e.cat] || 0); });
+      extra = Math.min(extra, 500);
+      var met = total >= 3000;
+      r.rebate = total * 0.004 + (met ? extra : 0);
+      r.pools.push({ name: '額外回贈上限（每月）', used: met ? extra : 0, cap: 500, unit: 'rebate', remainSpendByCat: met ? [['網購 - 指定商戶／網上娛樂・服飾（8%）', (500 - extra) / 0.076], ['網購 - 一般（5%）', (500 - extra) / 0.046], ['海外實體 - 外幣（4%）', (500 - extra) / 0.036]] : [] });
+      r.notes.push(met ? '已達到每月 $3,000 簽賬門檻，額外回贈已解鎖。' : '未達到每月 $3,000 簽賬門檻（現 ' + money(total) + '），額外回贈未解鎖，暫只計基本 0.4%。');
+    } else if (card === 'HSBC RED' || card === 'HSBC RED 附屬卡') {
+      redCompute(r, entries, total);
+      if (card === 'HSBC RED 附屬卡') r.notes.push('附屬卡（媽媽）獨立額度，唔同主卡共用。');
+    } else if (card === '渣打 Simply Cash') {
+      var overseas = sumCat(entries, ['海外實體 - 外幣']);
+      r.rebate = (total - overseas) * 0.015 + overseas * 0.02;
+      r.notes.push('本地 1.5%／外幣 2%，冇上限。');
+    } else if (card === '安信 WeWa') {
+      var poolSpend = sumCat(entries, ['手機支付', '海外實體 - 外幣']);
+      var metW = total >= 1500;
+      var extraUsedW = metW ? Math.min(poolSpend * 0.036, 200) : 0;
+      r.rebate = total * 0.004 + extraUsedW;
+      r.pools.push({ name: '自選（手機支付）＋海外 4%', used: Math.min(poolSpend, 5556), cap: 5556, unit: 'spend' });
+      r.notes.push(metW ? '已達到每月 $1,500 簽賬門檻。' : '未達到每月 $1,500 簽賬門檻（現 ' + money(total) + '），4% 額外回贈未解鎖，暫只計基本 0.4%。');
+    } else if (card === '中銀 BOC Bliss') {
+      var desB = sumCat(entries, ['網購 - 指定商戶']);
+      var genB = sumCat(entries, ['網購 - 一般']);
+      var desIn = Math.min(desB, 10000);
+      var genIn = Math.min(genB, 10000 - desIn);
+      r.rebate = desIn * 0.06 + genIn * 0.04 + (total - desIn - genIn) * 0.004;
+      r.pools.push({ name: '網上簽賬（每月首 $10,000）', used: Math.min(desB + genB, 10000), cap: 10000, unit: 'spend' });
+      r.notes.push('指定商戶 6%／一般網購 4%，共用首 $10,000 額度。');
+    } else if (card === 'AEON WAKUWAKU') {
+      var extraW = 0;
+      entries.forEach(function (e) {
+        if (['網購 - 一般', '網購 - 指定商戶', '日本實體簽賬'].indexOf(e.cat) >= 0) extraW += e.amount * 0.056;
+        else if (e.cat === '本地實體 - 一般') extraW += e.amount * 0.006;
+      });
+      extraW = Math.min(extraW, 200);
+      r.rebate = total * 0.004 + extraW;
+      r.pools.push({ name: '額外回贈上限（每周期）', used: extraW, cap: 200, unit: 'rebate', remainSpendByCat: [['網購／日本簽賬（6%）', (200 - extraW) / 0.056]] });
+      r.notes.push('截數日每月12號，周期為13號至下個月12號。');
+    } else if (card === '建行 eye+') {
+      var onlineE = sumCat(entries, ['網購 - 一般']);
+      var mobE = sumCat(entries, ['手機支付']);
+      var eligE = onlineE + mobE;
+      var metE = eligE >= 3000;
+      var onIn = Math.min(onlineE, 8000);
+      var mobIn = Math.min(mobE, 8000 - onIn);
+      r.rebate = metE ? (onIn * 0.05 + mobIn * 0.03 + (total - onIn - mobIn) * 0.004) : total * 0.004;
+      r.pools.push({ name: '合資格簽賬（網購＋感應／手機）', used: Math.min(eligE, 8000), cap: 8000, unit: 'spend' });
+      r.notes.push(metE ? '已達到每月 $3,000 合資格簽賬門檻，額外回贈已解鎖。' : '未達到每月 $3,000 合資格簽賬門檻（現 ' + money(eligE) + '），額外回贈未解鎖，暫只計基本 0.4%。');
+    } else if (card === '中銀 SOGO Visa') {
+      var mob = sumCat(entries, ['手機支付']);
+      var inStore = sumCat(entries, ['SOGO 店內']);
+      r.rebate = Math.min(mob, 2000) * 0.054 + Math.max(mob - 2000, 0) * 0.004 + inStore * 0.05 + (total - mob - inStore) * 0.004;
+      r.pools.push({ name: '手機支付 5.4%', used: Math.min(mob, 2000), cap: 2000, unit: 'spend' });
+      r.notes.push('SOGO 店內簽賬 5% 冇上限，已簽 ' + money(inStore) + '。');
+    } else if (card === '中銀 GO 鑽石卡') {
+      var go = sumCat(entries, ['指定Go商戶']);
+      var mobG = sumCat(entries, ['手機支付']);
+      r.rebate = Math.min(go, 2000) * 0.05 + Math.min(mobG, 2500) * 0.04 + (total - Math.min(go, 2000) - Math.min(mobG, 2500)) * 0.004;
+      r.pools.push({ name: '指定Go商戶 5%', used: Math.min(go, 2000), cap: 2000, unit: 'spend' });
+      r.pools.push({ name: '手機支付 4%（積分）', used: Math.min(mobG, 2500), cap: 2500, unit: 'spend' });
+    } else if (card === 'HSBC EveryMile') {
+      var desSpend = sumCat(entries, ['網購 - 指定商戶', '旅遊簽賬', '海外實體 - 外幣', '本地交通／咖啡輕食']);
+      r.miles = Math.floor(desSpend / 2 + (total - desSpend) / 5);
+      r.pools.push({ name: '指定商戶 $2／里（冇上限）', used: desSpend, cap: null, unit: 'info' });
+    }
+    return r;
+  }
+
+  var syncBtn = document.getElementById('syncBtn');
+  var quotaMsg = document.getElementById('quotaMsg');
+  syncBtn.onclick = function () {
+    syncBtn.disabled = true; quotaMsg.textContent = '同步緊…';
+    jsonp({ fn: 'entries', code: savedCode || '' }, function (res) {
+      syncBtn.disabled = false;
+      if (res && res.ok && res.entries) {
+        entriesCache = res.entries;
+        quotaData = res.entries;
+        var t = new Date();
+        quotaMsg.textContent = '最後同步：' + t.getHours() + ':' + ('0' + t.getMinutes()).slice(-2);
+        renderQuotaList();
+      } else if (res && res.error === 'code') {
+        codeExpired();
+      } else {
+        quotaMsg.innerHTML = '<span class="err">同步失敗，請再試一次</span>';
+      }
+    });
+  };
+  function renderQuotaList() {
+    document.getElementById('quotaDetail').style.display = 'none';
+    var box = document.getElementById('quotaList');
+    box.style.display = '';
+    box.innerHTML = '';
+    CARDS.forEach(function (card) {
+      var r = computeCard(card, quotaData);
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cardrow';
+      b.innerHTML = '<span>' + card + '</span><span class="amt">' + money(r.total) + '</span>';
+      b.onclick = function () { renderQuotaDetail(r); };
+      box.appendChild(b);
+    });
+  }
+  function renderQuotaDetail(r) {
+    document.getElementById('quotaList').style.display = 'none';
+    var d = document.getElementById('quotaDetail');
+    d.style.display = '';
+    var html = '<button id="backBtn" type="button">← 返回</button>';
+    html += '<h2>' + r.card + '</h2>';
+    html += '<div class="note">Period：' + r.periodLabel + '</div>';
+    html += '<p>總共消費<br><span class="big">' + money(r.total) + '</span></p>';
+    if (r.miles !== null) html += '<p>累積里數<br><span class="big">' + r.miles.toLocaleString('en-HK') + ' 里</span></p>';
+    else html += '<p>預計已賺回贈<br><span class="big">' + money(r.rebate) + '</span></p>';
+    r.pools.forEach(function (pool) {
+      html += '<div class="pool"><div class="pname">' + pool.name + '</div>';
+      if (pool.unit === 'spend') {
+        var pct = Math.min(pool.used / pool.cap * 100, 100);
+        html += '<div>已用 ' + money(pool.used) + ' ／ 上限 ' + money(pool.cap) + '</div>';
+        html += '<div>仲剩 ' + money(pool.cap - pool.used) + ' 可簽</div>';
+        html += '<div class="bar2"><div style="width:' + pct + '%"></div></div>';
+      } else if (pool.unit === 'rebate') {
+        var pct2 = Math.min(pool.used / pool.cap * 100, 100);
+        html += '<div>已用回贈 ' + money(pool.used) + ' ／ 上限 ' + money(pool.cap) + '</div>';
+        html += '<div>仲剩回贈 ' + money(pool.cap - pool.used) + '</div>';
+        html += '<div class="bar2"><div style="width:' + pct2 + '%"></div></div>';
+        (pool.remainSpendByCat || []).forEach(function (pair) {
+          html += '<div>' + pair[0] + '：仲簽得 ' + money(Math.max(pair[1], 0)) + '</div>';
+        });
+      } else {
+        html += '<div>今期已簽 ' + money(pool.used) + '</div>';
+      }
+      html += '</div>';
+    });
+    r.notes.forEach(function (n) { html += '<div class="note">' + n + '</div>'; });
+    html += '<div class="note">預計回贈按已記錄消費估算，實際以銀行月結單為準。</div>';
+    d.innerHTML = html;
+    document.getElementById('backBtn').onclick = function () { renderQuotaList(); };
+  }
 </script>
 </body>
 </html>
